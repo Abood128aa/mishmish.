@@ -3,26 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mishmish Server 🌸</title>
+    <title>Mishmish Space 🌸</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { background: #121212; color: white; text-align: center; font-family: sans-serif; padding: 20px; }
-        .note { color: #ff9f43; font-size: 26px; margin: 20px 0; font-weight: bold; }
-        .video-wrapper { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 95%; margin: 20px auto; border-radius: 20px; display: none; border: 2px solid #ff9f43; }
-        .video-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
-        /* علامة الحفظ الدائم */
-        #permTag { font-size: 12px; color: #2ecc71; display: none; margin-bottom: 10px; }
+        :root { --main-color: #ff9f43; --bg-dark: #121212; --card-bg: rgba(255, 255, 255, 0.05); }
+        body { background: var(--bg-dark); color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        
+        .header { margin-bottom: 30px; animation: fadeInDown 1s; }
+        .header h1 { font-size: 24px; color: var(--main-color); letter-spacing: 2px; text-transform: uppercase; }
+
+        .main-card { background: var(--card-bg); backdrop-filter: blur(10px); border-radius: 30px; border: 1px solid rgba(255,255,255,0.1); width: 100%; max-width: 500px; padding: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.4); transition: 0.5s; }
+        
+        .note-area { font-size: 22px; font-weight: bold; margin: 20px 0; color: #fff; line-height: 1.6; }
+        
+        #mediaContainer iframe { width: 100%; height: 400px; border-radius: 20px; border: 2px solid var(--main-color); box-shadow: 0 0 20px rgba(255,159,67,0.2); }
+
+        .interaction-bar { display: flex; justify-content: space-around; margin: 25px 0; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px; }
+        .action-btn { background: none; border: none; color: #ccc; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px; transition: 0.3s; }
+        .action-btn i { font-size: 24px; }
+        .action-btn:hover { color: var(--main-color); }
+        .action-btn span { font-size: 12px; font-weight: bold; }
+
+        .comments-section { text-align: right; width: 100%; margin-top: 20px; }
+        .comment-bubble { background: rgba(255,255,255,0.07); padding: 12px 18px; border-radius: 15px 15px 0 15px; margin-bottom: 10px; position: relative; animation: slideIn 0.5s; }
+        .comment-text { font-size: 15px; color: #eee; }
+        .reply-text { font-size: 13px; color: var(--main-color); margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.05); display: block; }
+
+        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
-    <h1>Mishmish Server 🌸</h1>
-    <div id="permTag">📌 محتوى مثبت</div>
-    <div id="noteDisplay" class="note"></div>
+    <div class="header">
+        <h1>Mishmish Server 🌸</h1>
+    </div>
 
-    <div id="videoContainer" class="video-wrapper">
-        <iframe id="videoPlayer" src="" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+    <div class="main-card">
+        <div id="noteDisplay" class="note-area">جاري التحميل...</div>
+        
+        <div id="mediaContainer" style="display:none;">
+            <iframe id="universalPlayer" src="" allowfullscreen></iframe>
+        </div>
+
+        <div class="interaction-bar">
+            <button class="action-btn" onclick="react('like')"><i class="fas fa-heart"></i><span id="likeCount">0</span></button>
+            <button class="action-btn" onclick="react('dislike')"><i class="fas fa-heart-broken"></i><span id="dislikeCount">0</span></button>
+            <button class="action-btn"><i class="fas fa-comment-dots"></i><span id="commCount">0</span></button>
+        </div>
+
+        <div class="comments-section">
+            <div id="commentsList"></div>
+        </div>
     </div>
 
     <script>
@@ -30,52 +64,49 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        function checkExpiry(snapshot, path) {
-            const data = snapshot.val();
-            if (!data || !data.content) return null;
+        // جلب المحتوى الرئيسي
+        db.ref('post').on('value', (s) => {
+            const data = s.val();
+            const noteBox = document.getElementById('noteDisplay');
+            const player = document.getElementById('universalPlayer');
+            const container = document.getElementById('mediaContainer');
 
-            // إذا كان "دائم" لا نفعل شيء
-            if (data.permanent) {
-                document.getElementById('permTag').style.display = 'block';
-                return data.content;
-            }
-
-            document.getElementById('permTag').style.display = 'none';
-            const oneHour = 60 * 60 * 1000; // ساعة بالملي ثانية
-            const now = Date.now();
-
-            if (now - data.timestamp > oneHour) {
-                // انتهت الساعة -> امسح من الداتابيز
-                db.ref(path).set(null);
-                return "";
-            }
-            return data.content;
-        }
-
-        // مراقبة النص
-        db.ref('note').on('value', (s) => {
-            const content = checkExpiry(s, 'note');
-            document.getElementById('noteDisplay').innerText = content || "";
-        });
-
-        // مراقبة الفيديو
-        db.ref('video_url').on('value', (s) => {
-            const content = checkExpiry(s, 'video_url');
-            const container = document.getElementById('videoContainer');
-            if (content) {
-                let id = content.includes("v=") ? content.split("v=")[1].split("&")[0] : content.split("youtu.be/")[1];
-                document.getElementById('videoPlayer').src = `https://www.youtube.com/embed/${id}?autoplay=1`;
-                container.style.display = 'block';
-            } else {
-                container.style.display = 'none';
+            if (data) {
+                const content = data.content;
+                if (content.startsWith('http')) {
+                    noteBox.innerText = "وصلك رابط جديد ✨";
+                    player.src = content; container.style.display = 'block';
+                } else {
+                    noteBox.innerText = content; container.style.display = 'none';
+                }
             }
         });
 
-        // فحص تلقائي كل دقيقة لضمان المسح حتى لو الصفحة مفتوحة
-        setInterval(() => {
-            db.ref('note').once('value', s => checkExpiry(s, 'note'));
-            db.ref('video_url').once('value', s => checkExpiry(s, 'video_url'));
-        }, 60000);
+        // جلب التعليقات مع الردود
+        db.ref('comments').on('value', (s) => {
+            const list = document.getElementById('commentsList');
+            list.innerHTML = "";
+            let count = 0;
+            s.forEach((child) => {
+                count++;
+                const c = child.val();
+                let html = `<div class="comment-bubble">
+                    <div class="comment-text">${c.text}</div>`;
+                if(c.reply) html += `<span class="reply-text">💬 رد المشرف: ${c.reply}</span>`;
+                html += `</div>`;
+                list.innerHTML += html;
+            });
+            document.getElementById('commCount').innerText = count;
+        });
+
+        // التفاعلات
+        db.ref('reactions').on('value', (s) => {
+            const d = s.val() || {like:0, dislike:0};
+            document.getElementById('likeCount').innerText = d.like;
+            document.getElementById('dislikeCount').innerText = d.dislike;
+        });
+
+        function react(type) { db.ref('reactions/' + type).transaction(c => (c || 0) + 1); }
     </script>
 </body>
 </html>
