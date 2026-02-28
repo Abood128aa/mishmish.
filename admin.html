@@ -3,70 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة تحكم عبود 📱</title>
+    <title>لوحة تحكم عبود الشاملة 🛠️</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
-        body { background: #1a1a1a; color: white; text-align: center; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; }
-        .container { max-width: 400px; margin: auto; }
-        .box { background: #222; padding: 20px; border-radius: 15px; border: 1px solid #ff9f43; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-        h2 { color: #ff9f43; }
-        input { width: 90%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #444; background: #333; color: white; }
-        button { width: 95%; padding: 15px; background: #ff9f43; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        button:active { transform: scale(0.95); background: #e67e22; }
-        .footer { font-size: 12px; color: #666; margin-top: 20px; }
+        body { background: #0f0f0f; color: white; font-family: 'Segoe UI', sans-serif; padding: 20px; text-align: center; }
+        .card { background: #1e1e1e; border-radius: 15px; padding: 20px; margin-bottom: 20px; border: 1px solid #333; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        h2 { color: #ff9f43; margin-bottom: 20px; }
+        h4 { margin: 5px 0; color: #bbb; font-size: 14px; text-align: right; }
+        input { width: 90%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #444; background: #2a2a2a; color: white; outline: none; }
+        input:focus { border-color: #ff9f43; }
+        button { width: 95%; padding: 12px; background: #ff9f43; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 5px; }
+        button:hover { background: #e67e22; }
+        .status { font-size: 12px; color: #2ecc71; margin-top: 10px; display: none; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2>التحكم في صفحة مشمش 📱</h2>
-        <p>أي تغيير هنا سيظهر عند مشمش فوراً</p>
 
-        <div class="box">
-            <h4>تغيير الجملة (النص)</h4>
-            <input type="text" id="noteInput" placeholder="اكتب الجملة الجديدة هنا...">
-            <button onclick="updateNote()">تحديث الجملة الآن</button>
-        </div>
+    <h2>🛠️ لوحة تحكم مـشـمـش</h2>
 
-        <div class="box">
-            <h4>إضافة رابط صورة جديد</h4>
-            <input type="text" id="imgInput" placeholder="ضع رابط الصورة المباشر (.jpg)">
-            <button onclick="addImg()">إضافة الصورة للمعرض</button>
-        </div>
-
-        <div class="footer">برمجة عبود - متصل بقاعدة البيانات ✅</div>
+    <div class="card">
+        <h4>✍️ تغيير الرسالة (الكلام العلوي)</h4>
+        <input type="text" id="noteInput" placeholder="اكتب الرسالة الجديدة هنا...">
+        <button onclick="saveData('note', 'noteInput')">تحديث الرسالة</button>
     </div>
 
+    <div class="card">
+        <h4>🖼️ تغيير الصورة (رابط مباشر)</h4>
+        <input type="text" id="imgInput" placeholder="ضع رابط الصورة (.jpg, .png, .gif)">
+        <button onclick="saveData('main_image', 'imgInput')" style="background: #3498db;">تغيير الصورة الآن</button>
+    </div>
+
+    <div class="card">
+        <h4>🎵 تغيير ملف الصوت (رابط مباشر)</h4>
+        <input type="text" id="musicInput" placeholder="ضع رابط ملف MP3 هنا">
+        <button onclick="saveData('music_url', 'musicInput')" style="background: #9b59b6;">تحديث الموسيقى</button>
+    </div>
+
+    <p style="color: #555; font-size: 11px;">متصل بقاعدة البيانات: ourphotoshare-a874a ✅</p>
+
     <script>
-        // إعدادات Firebase المأخوذة من صورتك
+        // إعدادات Firebase من صورك
         const firebaseConfig = {
             databaseURL: "https://ourphotoshare-a874a-default-rtdb.firebaseio.com"
         };
-        
-        // تشغيل Firebase
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
+        firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // وظيفة تحديث الجملة (Note)
-        function updateNote() {
-            const newText = document.getElementById('noteInput').value;
-            if(newText.trim() === "") return alert("اكتب جملة أولاً!");
-            
-            db.ref('note').set(newText)
-                .then(() => alert("تم تحديث الجملة بنجاح!"))
-                .catch((error) => alert("خطأ: " + error.message));
-        }
+        // وظيفة موحدة لحفظ البيانات
+        function saveData(path, inputId) {
+            const value = document.getElementById(inputId).value;
+            if(!value.trim()) return alert("الرجاء إدخال بيانات أولاً!");
 
-        // وظيفة إضافة صورة (Images)
-        function addImg() {
-            const imgUrl = document.getElementById('imgInput').value;
-            if(imgUrl.trim() === "") return alert("ضع رابط الصورة أولاً!");
-            
-            db.ref('images').push(imgUrl)
-                .then(() => alert("تمت إضافة الصورة لمشمش!"))
-                .catch((error) => alert("خطأ: " + error.message));
+            db.ref(path).set(value)
+                .then(() => {
+                    alert("تم التحديث بنجاح! ✅");
+                    document.getElementById(inputId).value = ""; // مسح الخانة بعد الحفظ
+                })
+                .catch((error) => alert("حدث خطأ: " + error.message));
         }
     </script>
 </body>
