@@ -1,97 +1,30 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mishmish Server 🌸</title>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    
-    <style>
-        body { background: #121212; color: white; text-align: center; font-family: sans-serif; padding: 20px; }
-        .card { background: #1e1e1e; border-radius: 25px; padding: 20px; max-width: 450px; margin: auto; border: 1px solid #333; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .note { color: #ff9f43; font-size: 24px; font-weight: bold; margin: 20px 0; min-height: 30px; }
-        .video-wrapper { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 15px; display: none; margin-bottom: 20px; }
-        .video-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
-        .actions { display: flex; justify-content: space-around; padding-top: 15px; border-top: 1px solid #333; }
-        .btn-act { background: none; border: none; color: #888; cursor: pointer; display: flex; flex-direction: column; align-items: center; }
-        .btn-act i { font-size: 22px; margin-bottom: 5px; }
-        .active-like { color: #e74c3c !important; }
-        .active-dislike { color: #555 !important; }
-        .comments { text-align: right; margin-top: 15px; font-size: 14px; color: #ccc; }
-        .reply { color: #ff9f43; display: block; margin-top: 5px; padding-right: 15px; border-right: 2px solid #ff9f43; }
-    </style>
-</head>
-<body>
+<script>
+    // ... (نفس إعدادات Firebase السابقة) ...
 
-    <h2 style="color: #ff9f43; margin-bottom: 30px;">🌸 MISHMISH SERVER</h2>
+    function react(type) {
+        // التحقق إذا كان المستخدم قد صوت مسبقاً لهذا النوع (like أو dislike)
+        const hasVoted = localStorage.getItem('voted_' + type);
 
-    <div class="card">
-        <div id="noteDisplay" class="note">انتظر قليلاً...</div>
+        if (hasVoted) {
+            alert("لقد سجلت إعجابك بالفعل! ✨");
+            return; // التوقف هنا وعدم زيادة الرقم في Firebase
+        }
 
-        <div id="videoContainer" class="video-wrapper">
-            <iframe id="videoPlayer" src="" allowfullscreen></iframe>
-        </div>
-
-        <div class="actions">
-            <button class="btn-act" onclick="react('like')"><i class="fas fa-heart"></i><span id="lk">0</span></button>
-            <button class="btn-act" onclick="react('dislike')"><i class="fas fa-heart-broken"></i><span id="dk">0</span></button>
-            <button class="btn-act"><i class="fas fa-comments"></i><span id="cm">0</span></button>
-        </div>
-
-        <div id="commentsList" class="comments"></div>
-    </div>
-
-    <script>
-        // إعدادات Firebase الخاصة بك
-        const conf = { databaseURL: "https://ourphotoshare-a874a-default-rtdb.firebaseio.com" };
-        if (!firebase.apps.length) { firebase.initializeApp(conf); }
-        const db = firebase.database();
-
-        // جلب الرسالة والفيديو
-        db.ref('post').on('value', (s) => {
-            const data = s.val();
-            const note = document.getElementById('noteDisplay');
-            const container = document.getElementById('videoContainer');
-            const player = document.getElementById('videoPlayer');
-
-            if (data && data.content) {
-                if (data.content.includes('http')) {
-                    note.innerText = "رابط جديد 🔗";
-                    player.src = data.content.replace("watch?v=", "embed/");
-                    container.style.display = 'block';
-                } else {
-                    note.innerText = data.content;
-                    container.style.display = 'none';
-                }
-            } else { note.innerText = "لا يوجد رسائل حالياً"; }
+        // إذا لم يصوت بعد، نقوم بزيادة الرقم في القاعدة
+        db.ref('reactions/' + type).transaction((current) => {
+            return (current || 0) + 1;
+        }).then(() => {
+            // حفظ حالة التصويت في ذاكرة المتصفح لمنع التكرار
+            localStorage.setItem('voted_' + type, 'true');
+            
+            // تغيير لون الأيقونة ليعرف أنه تم التصويت
+            document.getElementById('icon-' + type).style.color = "#ff9f43";
         });
+    }
 
-        // جلب التفاعلات
-        db.ref('reactions').on('value', (s) => {
-            const d = s.val() || {like:0, dislike:0};
-            document.getElementById('lk').innerText = d.like;
-            document.getElementById('dk').innerText = d.dislike;
-        });
-
-        // جلب التعليقات والردود
-        db.ref('comments').on('value', (s) => {
-            const list = document.getElementById('commentsList');
-            list.innerHTML = "";
-            let count = 0;
-            s.forEach((child) => {
-                count++;
-                const c = child.val();
-                let h = `<div style="margin-bottom:10px;">💬 ${c.text}`;
-                if(c.reply) h += `<span class="reply">📩 رد: ${c.reply}</span>`;
-                h += `</div>`;
-                list.innerHTML += h;
-            });
-            document.getElementById('cm').innerText = count;
-        });
-
-        function react(t) { db.ref('reactions/' + t).transaction(c => (c || 0) + 1); }
-    </script>
-</body>
-</html>
+    // عند تحميل الصفحة، نتحقق إذا كان قد صوت سابقاً لتلوين الأيقونات
+    window.onload = function() {
+        if(localStorage.getItem('voted_like')) document.getElementById('icon-like').style.color = "#ff9f43";
+        if(localStorage.getItem('voted_dislike')) document.getElementById('icon-dislike').style.color = "#ff9f43";
+    };
+</script>
