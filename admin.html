@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>لوحة تحكم سيرفر مشمش</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <style>
+        body { background: #1a1a1a; color: white; font-family: sans-serif; text-align: center; padding: 20px; }
+        input, button { padding: 10px; margin: 10px; border-radius: 5px; border: none; width: 80%; max-width: 400px; }
+        button { background: #ff9f43; color: white; cursor: pointer; font-weight: bold; }
+        .section { border: 1px solid #333; padding: 20px; margin-bottom: 20px; border-radius: 10px; }
+    </style>
+</head>
+<body>
+    <h1>التحكم في صفحة مشمش 📱</h1>
+
+    <div class="section">
+        <h3>إضافة صورة جديدة</h3>
+        <input type="text" id="imgUrl" placeholder="ضع رابط الصورة المباشر هنا">
+        <button onclick="addPhoto()">إرسال الصورة</button>
+    </div>
+
+    <div class="section">
+        <h3>تغيير رسالة الترحيب</h3>
+        <input type="text" id="msgText" placeholder="اكتب جملة لمشمش...">
+        <button onclick="updateMsg()">تحديث الكلام</button>
+    </div>
+
+    <script>
+        // ضع إعدادات Firebase الخاصة بك هنا (نفس التي في index.html)
+        const firebaseConfig = {
+            databaseURL: "https://ourphotoshare-a874a-default-rtdb.firebaseio.com",
+            // ... (أكمل باقي الإعدادات من ملف index.html الخاص بك)
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        function addPhoto() {
+            const url = document.getElementById('imgUrl').value;
+            if(url) {
+                db.ref('images').push(url); // يضيف صورة جديدة تلقائياً
+                alert("تم إرسال الصورة لمشمش!");
+                document.getElementById('imgUrl').value = '';
+            }
+        }
+
+        function updateMsg() {
+            const msg = document.getElementById('msgText').value;
+            db.ref('welcomeMessage').set(msg);
+            alert("تم تحديث الرسالة!");
+        }
+    </script>
+</body>
+</html>
