@@ -107,15 +107,16 @@
     </footer>
 
     <script>
-        // --- إعدادات Firebase الخاصة بك ---
+        // --- إعدادات Firebase الخاصة بك والمستخرجة من الصور ---
         const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-            databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_PROJECT_ID.appspot.com",
-            messagingSenderId: "YOUR_ID",
-            appId: "YOUR_APP_ID"
+            apiKey: "AIzaSyAwkFMJ9Tmmvg5kwDVGlUVCJBnhrLIH-Po",
+            authDomain: "ourphotoshare-a874a.firebaseapp.com",
+            databaseURL: "https://ourphotoshare-a874a-default-rtdb.firebaseio.com",
+            projectId: "ourphotoshare-a874a",
+            storageBucket: "ourphotoshare-a874a.firebasestorage.app",
+            messagingSenderId: "1064643435270",
+            appId: "1:1064643435270:web:74e7e9c9f6fcd45b279c87",
+            measurementId: "G-9JPDC3PFWN"
         };
 
         // بدء تشغيل Firebase
@@ -124,9 +125,9 @@
         const galleryElement = document.getElementById('gallery');
         const statusElement = document.getElementById('status');
 
-        // وظيفة جلب الصور وتحديثها لحظياً
+        // وظيفة جلب الصور وتحديثها لحظياً من Realtime Database
         database.ref('images').on('value', (snapshot) => {
-            galleryElement.innerHTML = ''; // مسح الصور الحالية لتحديثها بالجديد
+            galleryElement.innerHTML = ''; 
             const data = snapshot.val();
             
             if (data) {
@@ -138,10 +139,10 @@
                     galleryElement.appendChild(card);
                 });
             } else {
-                statusElement.innerText = "السيرفر فارغ - بانتظار رفع الصور";
+                statusElement.innerText = "السيرفر فارغ - بانتظار رفع الصور في Firebase";
             }
         }, (error) => {
-            statusElement.innerText = "خطأ في الاتصال بالسيرفر";
+            statusElement.innerText = "خطأ في الاتصال: تأكد من تفعيل Rules في Firebase";
             statusElement.style.color = "red";
         });
     </script>
