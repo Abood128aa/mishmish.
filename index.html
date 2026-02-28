@@ -3,48 +3,86 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mishmish Space</title>
+    <title>Mishmish Server 🌸</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
-        body { background: #0f0f0f; color: white; font-family: sans-serif; text-align: center; margin: 0; }
-        header { padding: 30px; background: #1a1a1a; border-bottom: 2px solid #ff9f43; }
-        #text-msg { font-size: 22px; color: #ff9f43; margin: 20px; padding: 10px; }
-        .gallery { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; padding: 20px; }
-        .card { background: #1a1a1a; border-radius: 12px; border: 1px solid #333; width: 250px; overflow: hidden; }
-        .card img { width: 100%; display: block; }
-        audio { margin-top: 10px; filter: sepia(100%) saturate(200%) grayscale(100%) outline: invert(); }
+        body { background-color: #121212; color: white; font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+        .note { color: #ff9f43; font-size: 24px; margin-bottom: 20px; font-weight: bold; }
+        img { max-width: 90%; border-radius: 15px; box-shadow: 0 4px 15px rgba(255,159,67,0.3); margin-top: 20px; }
+        audio { margin-top: 20px; width: 90%; }
+        
+        /* تصميم لوحة التحكم المخفية */
+        #adminPanel { display: none; background: #222; padding: 20px; border-radius: 15px; border: 1px solid #ff9f43; margin-top: 30px; }
+        input { width: 80%; padding: 10px; margin: 10px 0; border-radius: 5px; border: 1px solid #444; background: #333; color: white; }
+        button { padding: 10px 20px; background: #ff9f43; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        .secret-trigger { cursor: pointer; user-select: none; }
     </style>
 </head>
 <body>
-    <header>
-        <h1>Mishmish Server</h1>
-        <div id="text-msg">تحميل الرسالة...</div>
-        <audio id="player" controls>
-            <source src="music.mp3" type="audio/mpeg">
-        </audio>
-    </header>
 
-    <div class="gallery" id="gallery"></div>
+    <h1 class="secret-trigger" onclick="toggleAdmin()">Mishmish Server 🌸</h1>
+    
+    <div id="noteDisplay" class="note">جاري التحميل...</div>
+
+    <audio id="bgMusic" controls>
+        <source src="music.mp3" type="audio/mpeg">
+        متصفحك لا يدعم الصوت.
+    </audio>
+
+    <br>
+
+    <div id="imageContainer">
+        <img id="mainImage" src="" alt="مفاجأة لمشمش">
+    </div>
+
+    <div id="adminPanel">
+        <h3 style="color:#ff9f43;">لوحة التحكم السرية 🔐</h3>
+        <input type="text" id="noteInput" placeholder="اكتب جملة جديدة...">
+        <button onclick="updateNote()">تحديث الجملة</button>
+        <hr style="border-color:#444">
+        <input type="text" id="imgInput" placeholder="ضع رابط صورة جديد...">
+        <button onclick="updateImage()">تغيير الصورة</button>
+        <p style="font-size:10px; color:#666;">اضغط على العنوان مرة أخرى للإخفاء</p>
+    </div>
 
     <script>
-        const firebaseConfig = { databaseURL: "https://ourphotoshare-a874a-default-rtdb.firebaseio.com" };
+        // إعدادات Firebase الخاصة بك
+        const firebaseConfig = {
+            databaseURL: "https://ourphotoshare-a874a-default-rtdb.firebaseio.com"
+        };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // تحديث الكلام لحظياً
-        db.ref('note').on('value', (s) => { 
-            document.getElementById('text-msg').innerText = s.val() || "مرحباً بكِ"; 
+        // 1. عرض البيانات عند مشمش
+        db.ref('note').on('value', (snapshot) => {
+            document.getElementById('noteDisplay').innerText = snapshot.val() || "لا توجد جملة";
         });
 
-        // تحديث الصور لحظياً
-        db.ref('images').on('value', (s) => {
-            const g = document.getElementById('gallery');
-            g.innerHTML = '';
-            if(s.val()) Object.values(s.val()).forEach(url => {
-                g.innerHTML += `<div class="card"><img src="${url}"></div>`;
-            });
+        db.ref('main_image').on('value', (snapshot) => {
+            const imgUrl = snapshot.val();
+            if(imgUrl) document.getElementById('mainImage').src = imgUrl;
         });
+
+        // 2. وظائف لوحة التحكم (Admin)
+        function toggleAdmin() {
+            const panel = document.getElementById('adminPanel');
+            panel.style.display = (panel.style.display === 'none' || panel.style.display === '') ? 'block' : 'none';
+        }
+
+        function updateNote() {
+            const text = document.getElementById('noteInput').value;
+            if(text) {
+                db.ref('note').set(text).then(() => alert("تم تغيير الكلام!"));
+            }
+        }
+
+        function updateImage() {
+            const url = document.getElementById('imgInput').value;
+            if(url) {
+                db.ref('main_image').set(url).then(() => alert("تم تغيير الصورة!"));
+            }
+        }
     </script>
 </body>
 </html>
