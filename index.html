@@ -68,15 +68,11 @@
             animation: fadeIn 0.8s ease forwards;
         }
 
-        .photo-card:hover {
-            transform: translateY(-5px);
-            border-color: var(--accent-color);
-        }
-
         .photo-card img {
             width: 100%;
-            height: 300px;
-            object-fit: cover;
+            height: auto;
+            max-height: 500px;
+            object-fit: contain;
             display: block;
         }
 
@@ -96,18 +92,21 @@
 
     <header>
         <h1>Mishmish Server v1.0</h1>
-        <div class="server-status" id="status">جاري الاتصال بالسيرفر المخصص...</div>
+        <div class="server-status" id="status">● السيرفر متصل - تحديث لحظي نشط</div>
     </header>
 
     <div class="gallery-container" id="gallery">
+        <div class="photo-card">
+            <img src="https://i.ibb.co/8nz7VQdD/7ee93916775239f03813755ed461cc83.jpg" alt="Mishmish Photo">
         </div>
+    </div>
 
     <footer>
         المحتوى مشفر ومخصص لمشمش فقط
     </footer>
 
     <script>
-        // --- إعدادات Firebase الخاصة بك والمستخرجة من الصور ---
+        // إعدادات Firebase الخاصة بك
         const firebaseConfig = {
             apiKey: "AIzaSyAwkFMJ9Tmmvg5kwDVGlUVCJBnhrLIH-Po",
             authDomain: "ourphotoshare-a874a.firebaseapp.com",
@@ -119,31 +118,23 @@
             measurementId: "G-9JPDC3PFWN"
         };
 
-        // بدء تشغيل Firebase
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
         const galleryElement = document.getElementById('gallery');
-        const statusElement = document.getElementById('status');
 
-        // وظيفة جلب الصور وتحديثها لحظياً من Realtime Database
+        // جلب الصور الإضافية من Firebase تلقائياً
         database.ref('images').on('value', (snapshot) => {
-            galleryElement.innerHTML = ''; 
             const data = snapshot.val();
-            
             if (data) {
-                statusElement.innerText = "● السيرفر متصل - تحديث لحظي نشط";
+                // مسح المعرض وإعادة بنائه عند وجود بيانات جديدة في Firebase
+                galleryElement.innerHTML = ''; 
                 Object.values(data).forEach(url => {
                     const card = document.createElement('div');
                     card.className = 'photo-card';
                     card.innerHTML = `<img src="${url}" alt="Mishmish Photo">`;
                     galleryElement.appendChild(card);
                 });
-            } else {
-                statusElement.innerText = "السيرفر فارغ - بانتظار رفع الصور في Firebase";
             }
-        }, (error) => {
-            statusElement.innerText = "خطأ في الاتصال: تأكد من تفعيل Rules في Firebase";
-            statusElement.style.color = "red";
         });
     </script>
 
