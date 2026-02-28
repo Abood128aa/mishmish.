@@ -2,36 +2,48 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>Control Panel</title>
+    <title>لوحة تحكم عبود</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <style>
-        body { background: #222; color: white; text-align: center; font-family: sans-serif; }
-        input { width: 80%; padding: 10px; margin: 10px; border-radius: 5px; }
-        button { padding: 10px 20px; background: #ff9f43; border: none; cursor: pointer; color: white; font-weight: bold; }
+        body { background: #1a1a1a; color: white; text-align: center; font-family: sans-serif; padding: 20px; }
+        input { width: 90%; padding: 12px; margin: 10px 0; border-radius: 8px; border: none; }
+        button { width: 95%; padding: 15px; background: #ff9f43; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .box { background: #222; padding: 20px; border-radius: 15px; border: 1px solid #333; margin-bottom: 20px; }
     </style>
 </head>
 <body>
-    <h2>لوحة تحكم عبود 😎</h2>
-    
-    <input type="text" id="words" placeholder="اكتب جملة لمشمش هنا...">
-    <button onclick="sendWords()">تحديث الجملة</button>
-    <hr>
-    <input type="text" id="img" placeholder="ضع رابط الصورة المباشر هنا...">
-    <button onclick="sendImg()">إضافة صورة</button>
+    <h2>التحكم في صفحة مشمش 📱</h2>
+
+    <div class="box">
+        <h4>تغيير الكلام (الجملة)</h4>
+        <input type="text" id="note" placeholder="اكتب الجملة هنا...">
+        <button onclick="updateNote()">تحديث الجملة</button>
+    </div>
+
+    <div class="box">
+        <h4>إضافة رابط صورة</h4>
+        <input type="text" id="img" placeholder="ضع رابط الصورة المباشر...">
+        <button onclick="addImg()">إضافة الصورة</button>
+    </div>
 
     <script>
-        const firebaseConfig = { databaseURL: "https://ourphotoshare-a874a-default-rtdb.firebaseio.com" };
+        // إعدادات Firebase الخاصة بك
+        const firebaseConfig = {
+            databaseURL: "https://ourphotoshare-a874a-default-rtdb.firebaseio.com"
+        };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        function sendWords() {
-            db.ref('note').set(document.getElementById('words').value);
-            alert("تم تغيير الكلام عند مشمش!");
+        function updateNote() {
+            const val = document.getElementById('note').value;
+            db.ref('note').set(val);
+            alert("تم تغيير الكلام!");
         }
 
-        function sendImg() {
-            db.ref('images').push(document.getElementById('img').value);
+        function addImg() {
+            const val = document.getElementById('img').value;
+            db.ref('images').push(val);
             alert("تمت إضافة الصورة!");
         }
     </script>
