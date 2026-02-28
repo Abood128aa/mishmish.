@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم المنفصلة 🛠️</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <style>
+        body { background: #1a1a1a; color: white; font-family: sans-serif; text-align: center; padding: 20px; }
+        .card { background: #252525; padding: 20px; border-radius: 15px; border: 1px solid #ff9f43; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        h2 { color: #ff9f43; }
+        input { width: 85%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #444; background: #333; color: white; }
+        button { width: 90%; padding: 15px; background: #ff9f43; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        button:active { transform: scale(0.95); }
+        .status { font-size: 12px; color: #777; margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h2>التحكم بالرسالة ✍️</h2>
+        <input type="text" id="noteInput" placeholder="اكتب الجملة الجديدة...">
+        <button onclick="updateData('note', 'noteInput')">تحديث الرسالة</button>
+    </div>
+
+    <div class="card">
+        <h2>التحكم بالصورة 🖼️</h2>
+        <input type="text" id="imgInput" placeholder="ضع رابط الصورة المباشر...">
+        <button onclick="updateData('main_image', 'imgInput')" style="background:#3498db;">تغيير الصورة</button>
+    </div>
+
+    <div class="card">
+        <h2>التحكم بالصوت 🎵</h2>
+        <input type="text" id="musicInput" placeholder="ضع رابط MP3 المباشر...">
+        <button onclick="updateData('music_url', 'musicInput')" style="background:#9b59b6;">تغيير الموسيقى</button>
+    </div>
+
+    <div class="status">متصل بقاعدة البيانات ✅</div>
+
+    <script>
+        // إعدادات Firebase الخاصة بك
+        const firebaseConfig = {
+            databaseURL: "https://ourphotoshare-a874a-default-rtdb.firebaseio.com"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // وظيفة التحديث
+        function updateData(path, inputId) {
+            const val = document.getElementById(inputId).value;
+            if(!val.trim()) return alert("الخانة فارغة!");
+
+            db.ref(path).set(val)
+                .then(() => {
+                    alert("تم التحديث بنجاح! ✅");
+                    document.getElementById(inputId).value = ""; 
+                })
+                .catch((e) => alert("خطأ: " + e.message));
+        }
+    </script>
+</body>
+</html>
