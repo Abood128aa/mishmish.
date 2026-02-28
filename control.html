@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم الجديدة 🛠️</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <style>
+        body { background: #111; color: white; text-align: center; font-family: sans-serif; padding: 20px; }
+        .box { background: #222; padding: 20px; border-radius: 15px; border: 1px solid #ff9f43; margin-bottom: 20px; }
+        input { width: 85%; padding: 12px; margin: 10px 0; border-radius: 8px; background: #333; color: white; border: 1px solid #444; }
+        button { width: 90%; padding: 15px; background: #ff9f43; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h2>لوحة التحكم (Control) 📱</h2>
+    
+    <div class="box">
+        <h4>تغيير نص الرسالة</h4>
+        <input type="text" id="noteInput" placeholder="اكتب الجملة هنا...">
+        <button onclick="update('note', 'noteInput')">تحديث النص</button>
+    </div>
+
+    <div class="box">
+        <h4>تغيير رابط الصورة</h4>
+        <input type="text" id="imgInput" placeholder="رابط الصورة المباشر...">
+        <button onclick="update('main_image', 'imgInput')" style="background:#3498db;">تحديث الصورة</button>
+    </div>
+
+    <script>
+        // إعدادات Firebase من صورك
+        const config = { databaseURL: "https://ourphotoshare-a874a-default-rtdb.firebaseio.com" };
+        firebase.initializeApp(config);
+        const db = firebase.database();
+
+        function update(path, inputId) {
+            const val = document.getElementById(inputId).value;
+            if(val) {
+                db.ref(path).set(val).then(() => alert("تم التحديث بنجاح! ✅"));
+            }
+        }
+    </script>
+</body>
+</html>
